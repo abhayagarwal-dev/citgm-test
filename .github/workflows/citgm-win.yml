@@ -1,0 +1,25 @@
+name: CITGM Windows
+
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to test'
+        required: true
+        default: 'coffeescript'
+
+jobs:
+  citgm:
+    runs-on: windows-latest
+
+    steps:
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.11.0'
+
+      - name: Install citgm
+        run: npm install -g citgm
+
+      - name: Run citgm
+        run: citgm ${{ github.event.inputs.package }}
