@@ -1,25 +1,62 @@
-name: CITGM Windows
+name: Test a module with CITGM
 
 on:
   workflow_dispatch:
     inputs:
-      package:
-        description: 'Package to test'
+      module:
+        description: 'Module to test'
         required: true
-        default: 'coffeescript'
+      repository:
+        description: 'CITGM repository to checkout'
+        required: true
+        default: nodejs/citgm
+      ref:
+        description: 'CITGM GitHub ref to checkout'
+        required: true
+        default: main
 
 jobs:
-  citgm:
-    runs-on: windows-latest
+  show-parameters:
+    name: Parameters for testing "${{ github.event.inputs.module }}"
+
+    runs-on: ubuntu-latest
 
     steps:
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Log workflow parameters
+        env:
+          WORKFLOW_PARAMETERS: ${{ toJSON(github.event.inputs) }}
+        run: echo "$WORKFLOW_PARAMETERS"
+
+  test-module:
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-latest
+          - ubuntu-latest
+          - windows-latest
+        node-version:
+          - 22.x
+          - 24.x
+          - 26.x
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
         with:
-          node-version: '20.11.0'
+          repository: ${{ github.event.inputs.repository }}
+          ref: ${{ github.event.inputs.ref }}
+          show-progress: false
 
-      - name: Install citgm
-        run: npm install -g citgm
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v5
+        with:
+          node-version: ${{ matrix.node-version }}
 
-      - name: Run citgm
-        run: citgm ${{ github.event.inputs.package }}
+      - name: Install packages
+        run: npm ci
+
+      - name: Run CITGM
+        run: node bin/citgm.js ${{ github.event.inputs.module }}
