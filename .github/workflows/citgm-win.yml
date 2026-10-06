@@ -59,4 +59,4 @@ jobs:
         run: npm ci
 
       - name: Run CITGM
-        run: node bin/citgm.js ${{ github.event.inputs.module }}
+        run: node bin/citgm.js ${{ github.event.inputs.module }} --verbose
